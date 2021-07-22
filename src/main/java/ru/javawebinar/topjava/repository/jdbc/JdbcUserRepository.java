@@ -19,15 +19,10 @@ import ru.javawebinar.topjava.repository.UserRepository;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class JdbcUserRepository implements UserRepository {
-
-    //private static final BeanPropertyRowMapper<User> ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -62,13 +57,14 @@ public class JdbcUserRepository implements UserRepository {
             return null;
         }
         jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.getId());
-        jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role) values (" + user.getId() + ", ?)",
+        jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role) values (?, ?)",
                 user.getRoles(),
                 user.getRoles().size(),
                 new ParameterizedPreparedStatementSetter<Role>() {
                     @Override
                     public void setValues(PreparedStatement ps, Role role) throws SQLException {
-                        ps.setString(1, role.name());
+                        ps.setString(1, user.getId().toString());
+                        ps.setString(2, role.name());
                     }
                 });
         return user;
@@ -77,13 +73,11 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     @Transactional
     public boolean delete(int id) {
-        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", id);
         return jdbcTemplate.update("DELETE FROM users WHERE id=?", id) != 0;
     }
 
     @Override
     public User get(int id) {
-        //List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id=?", ROW_MAPPER, id);
         String sql = """
                     select u.id as user_id, u.name as user_name, u.email as user_email, u.password as user_password, 
                     u.registered as user_registered, u.enabled as user_enabled,
@@ -96,8 +90,6 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User getByEmail(String email) {
-//        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
-        //List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         String sql = """
                     select u.id as user_id, u.name as user_name, u.email as user_email, u.password as user_password, 
                     u.registered as user_registered, u.enabled as user_enabled,
@@ -110,12 +102,11 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public List<User> getAll() {
-        //return jdbcTemplate.query("SELECT * FROM users ORDER BY name, email", ROW_MAPPER);
         String sql = """
                     select u.id as user_id, u.name as user_name, u.email as user_email, u.password as user_password, 
                     u.registered as user_registered, u.enabled as user_enabled,
                            u.calories_per_day as user_calories, ur.role as user_role
-                    from users as u left join user_roles as ur on ur.user_id = u.id order by u.id desc
+                    from users as u left join user_roles as ur on ur.user_id = u.id order by u.name, u.email desc
                 """;
         return jdbcTemplate.query(sql, userExtractor);
     }
@@ -123,7 +114,7 @@ public class JdbcUserRepository implements UserRepository {
     private class UserExtractor implements ResultSetExtractor<List<User>> {
         @Override
         public List<User> extractData(ResultSet resultSet) throws SQLException, DataAccessException {
-            Map<Integer, User> data = new HashMap<>();
+            Map<Integer, User> data = new LinkedHashMap<>();
             while (resultSet.next()) {
                 Integer userId = resultSet.getInt("user_id");
                 User user = data.get(userId);
