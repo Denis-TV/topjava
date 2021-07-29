@@ -32,7 +32,7 @@ public class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void get() throws Exception {
-        perform(MockMvcRequestBuilders.get(REST_URL + meal1.getId()))
+        perform(MockMvcRequestBuilders.get(REST_URL + MEAL1_ID))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -75,21 +75,21 @@ public class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void delete() throws Exception {
-        perform(MockMvcRequestBuilders.delete(REST_URL + meal1.getId()))
+        perform(MockMvcRequestBuilders.delete(REST_URL + MEAL1_ID))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
-        assertThrows(NotFoundException.class, () -> mealService.get(meal1.getId(), USER_ID));
+        assertThrows(NotFoundException.class, () -> mealService.get(MEAL1_ID, USER_ID));
     }
 
     @Test
     void getBetween() throws Exception {
-        List<MealTo> expected = MealsUtil.getTos(List.of(meal7, meal6, meal5, meal4), user.getCaloriesPerDay());
+        List<MealTo> expected = MealsUtil.getTos(List.of(meal6, meal5, meal4), 0);
         perform(MockMvcRequestBuilders.get(REST_URL +
-                "by?startDate=" + meal4.getDateTime().toString() +
-                "&startTime=" + meal4.getDateTime().toString() +
-                "&endDate=" + meal7.getDateTime().toString() +
-                "&endTime=" + meal7.getDateTime().plusMinutes(1).toString()))
+                "by?startDate=2020-01-31" +
+                "&startTime=00:00"  +
+                "&endDate=2020-01-31"  +
+                "&endTime=20:00" ))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(MATCHER_TO.contentJson(expected));
