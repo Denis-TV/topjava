@@ -41,7 +41,23 @@ $(function () {
                     0,
                     "asc"
                 ]
-            ]
+            ],
+            "createdRow": function (row, data, index) {
+                if ( data.enabled == false ) {
+                    $(row).attr("data-userEnabled", false);
+                }
+            }
         })
     );
 });
+
+function enable(id, checkedValue) {
+    $.post(ctx.ajaxUrl + "enable/" + id,
+    {
+        value: checkedValue.valueOf()
+    }
+    ).done(function () {
+        updateTable();
+        successNoty("Saved");
+    });
+}
