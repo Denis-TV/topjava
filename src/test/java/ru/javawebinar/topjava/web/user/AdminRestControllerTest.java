@@ -99,7 +99,7 @@ class AdminRestControllerTest extends AbstractControllerTest {
     void enable() throws Exception {
         User testUser = new User(user);
         testUser.setEnabled(false);
-        perform(MockMvcRequestBuilders.post(REST_URL + "enable/" + USER_ID)
+        perform(MockMvcRequestBuilders.patch(REST_URL + USER_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValue(false)))
                 .andExpect(status().isNoContent());

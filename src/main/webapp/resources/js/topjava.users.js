@@ -43,7 +43,7 @@ $(function () {
                 ]
             ],
             "createdRow": function (row, data, index) {
-                if ( data.enabled == false ) {
+                if (!data.enabled) {
                     $(row).attr("data-userEnabled", false);
                 }
             }
@@ -52,12 +52,14 @@ $(function () {
 });
 
 function enable(id, checkedValue) {
-    $.post(ctx.ajaxUrl + "enable/" + id,
+    $.post(ctx.ajaxUrl + id,
     {
-        value: checkedValue.valueOf()
+        enabled: checkedValue.valueOf()
     }
     ).done(function () {
-        updateTable();
-        successNoty("Saved");
+        $("tr[id='" + id + "']").attr("data-userEnabled", checkedValue);
+        successNoty(checkedValue === true ? "Enabled" : "Disabled");
+    }).fail(function () {
+        $("input[id='" + id+ "']").prop("checked", !checkedValue);
     });
 }

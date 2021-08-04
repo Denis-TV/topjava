@@ -1,4 +1,5 @@
 const mealsAjaxUrl = "user/meals/";
+let filterForm;
 
 const ctx = {
     ajaxUrl: mealsAjaxUrl
@@ -31,26 +32,23 @@ $(function () {
             "order": [
                 [
                     0,
-                    "asc"
+                    "desc"
                 ]
             ]
         })
     );
+    filterForm = $("#filterForm");
 });
 
 function filter() {
-    $.get("user/meals/filtered", {
-        startDate: $("#startDate").val(),
-        endDate: $("#endDate").val(),
-        startTime: $("#startTime").val(),
-        endTime: $("#endTime").val()
-    }, function (data) {
-        ctx.datatableApi.clear().rows.add(data).draw();
-    });
+    $.get(ctx.ajaxUrl + "filtered",
+        filterForm.serialize(),
+        function (data) {
+            refillDatatable(data)
+        });
 }
 
 function filterCancel() {
-    $("#startDate, #endDate, #startTime, #endTime").val('');
-
+    filterForm[0].reset();
     updateTable();
 }
