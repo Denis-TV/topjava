@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import static ru.javawebinar.topjava.util.MealsUtil.createNewFromTo;
 import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
@@ -48,11 +49,25 @@ public abstract class AbstractMealController {
         return service.create(meal, userId);
     }
 
+    public Meal create(MealTo mealTo) {
+        int userId = SecurityUtil.authUserId();
+        log.info("create {}", mealTo);
+        checkNew(mealTo);
+        return service.create(createNewFromTo(mealTo), userId);
+    }
+
     public void update(Meal meal, int id) {
         int userId = SecurityUtil.authUserId();
         log.info("update {} for user {}", meal, userId);
         assureIdConsistent(meal, id);
         service.update(meal, userId);
+    }
+
+    public void update(MealTo mealTo, int id) {
+        int userId = SecurityUtil.authUserId();
+        log.info("update {} for user {}", mealTo, userId);
+        assureIdConsistent(mealTo, id);
+        service.update(mealTo, userId);
     }
 
     /**
@@ -62,7 +77,7 @@ public abstract class AbstractMealController {
      * </ol>
      */
     public List<MealTo> getBetween(@Nullable LocalDate startDate, @Nullable LocalTime startTime,
-                                            @Nullable LocalDate endDate, @Nullable LocalTime endTime) {
+                                   @Nullable LocalDate endDate, @Nullable LocalTime endTime) {
         int userId = SecurityUtil.authUserId();
         log.info("getBetween dates({} - {}) time({} - {}) for user {}", startDate, endDate, startTime, endTime, userId);
 
