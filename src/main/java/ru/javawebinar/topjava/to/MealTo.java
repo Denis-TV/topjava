@@ -1,32 +1,16 @@
 package ru.javawebinar.topjava.to;
 
-import org.hibernate.validator.constraints.Range;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.beans.ConstructorProperties;
-import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class MealTo extends BaseTo implements Serializable {
-    @Serial
-    private static final long serialVersionUid = 1;
+public class MealTo extends BaseTo {
 
-    @NotNull(message = "date-time is not entered")
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime dateTime;
 
-    @NotBlank(message = "check the 'description' field")
-    @Size(min = 2, max = 120, message = "description length must be in range 2-120 symbols")
     private String description;
 
-    @NotNull(message = "enter 'calories' value")
-    @Range(min = 10L, max = 5000L, message = "calories must be in range 10-5000")
-    private Integer calories;
+    private int calories;
 
     private boolean excess;
 
@@ -79,7 +63,7 @@ public class MealTo extends BaseTo implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MealTo mealTo = (MealTo) o;
-        return calories.equals(mealTo.calories) &&
+        return calories == mealTo.calories &&
                 excess == mealTo.excess &&
                 Objects.equals(id, mealTo.id) &&
                 Objects.equals(dateTime, mealTo.dateTime) &&

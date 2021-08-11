@@ -31,7 +31,7 @@ $(function () {
                     "data": "dateTime",
                     "render": function (date, type, row) {
                         if (type === "display") {
-                            return date.replace("T", " ");
+                            return date.substring(0, 16).replace("T", " ");
                         }
                         return date;
                     }
