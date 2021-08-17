@@ -10,6 +10,7 @@ import ru.javawebinar.topjava.util.exception.IllegalRequestDataException;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import javax.validation.*;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,11 @@ public class ValidationUtil {
 
     private ValidationUtil() {
     }
+
+    //TODO
+    public final static Map<String, String> CONSTRAINS_I18N_MAP = Map.of(
+            "users_unique_email_idx", "validation.email",
+            "meals_unique_user_datetime_idx", "Еда на данную дату и время уже существует");
 
     public static <T> void validate(T bean) {
         // https://alexkosarev.name/2018/07/30/bean-validation-api/
@@ -83,5 +89,15 @@ public class ValidationUtil {
                         .map(fe -> String.format("[%s] %s", fe.getField(), fe.getDefaultMessage()))
                         .collect(Collectors.joining("<br>"))
         );
+    }
+
+    public static void generateIllegalRequestDataException(BindingResult result) {
+        throw new IllegalRequestDataException(getBindingResultString(result));
+    }
+
+    public static String getBindingResultString(BindingResult result) {
+        return result.getFieldErrors().stream()
+                .map(fe -> String.format("[%s] %s", fe.getField(), fe.getDefaultMessage()))
+                .collect(Collectors.joining("<br />"));
     }
 }
