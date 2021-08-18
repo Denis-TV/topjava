@@ -2,15 +2,18 @@ package ru.javawebinar.topjava;
 
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
+import ru.javawebinar.topjava.to.UserTo;
 import ru.javawebinar.topjava.web.json.JsonUtil;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.model.AbstractBaseEntity.START_SEQ;
+import static ru.javawebinar.topjava.util.UserUtil.asTo;
 
 public class UserTestData {
     public static final MatcherFactory.Matcher<User> MATCHER = MatcherFactory.usingIgnoringFieldsComparator(User.class, "registered", "meals", "password");
@@ -52,5 +55,27 @@ public class UserTestData {
 
     public static String jsonWithPassword(User user, String passw) {
         return JsonUtil.writeAdditionProps(user, "password", passw);
+    }
+
+    public static List<User> getNotValid() {
+        User notValidName = getNew();
+        notValidName.setName("");
+
+        User notValidPassword = getNew();
+        notValidPassword.setPassword("");
+
+        User notValidEmail = getNew();
+        notValidEmail.setEmail("notvalidemail");
+
+        User notValidCalories = getNew();
+        notValidCalories.setCaloriesPerDay(10001);
+
+        return List.of(notValidName, notValidPassword, notValidEmail, notValidCalories);
+    }
+
+    public static List<UserTo> getNotValidTo() {
+        return getNotValid().stream()
+                .map(user -> asTo(user))
+                .collect(Collectors.toList());
     }
 }

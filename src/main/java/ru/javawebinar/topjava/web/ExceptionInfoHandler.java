@@ -9,6 +9,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,17 +24,19 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
+import java.util.Map;
 
+import static ru.javawebinar.topjava.util.ValidationUtil.CONSTRAINS_I18N_MAP;
 import static ru.javawebinar.topjava.util.ValidationUtil.getBindingResultString;
 import static ru.javawebinar.topjava.util.exception.ErrorType.*;
 
 @RestControllerAdvice(annotations = RestController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class ExceptionInfoHandler {
-    @Autowired
-    private static MessageSource messageSource;
-
     private static Logger log = LoggerFactory.getLogger(ExceptionInfoHandler.class);
+
+    @Autowired
+    private MessageSource messageSource;
 
     //  http://stackoverflow.com/a/22358422/548473
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -49,8 +52,11 @@ public class ExceptionInfoHandler {
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)  // 422
-    @ExceptionHandler({IllegalRequestDataException.class, MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class,
-            MethodArgumentNotValidException.class})
+    @ExceptionHandler({IllegalRequestDataException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class,
+            MethodArgumentNotValidException.class,
+            BindException.class})
     public ErrorInfo illegalRequestDataError(HttpServletRequest req, Exception e, Locale locale) {
         return logAndGetErrorInfo(req, e, false, VALIDATION_ERROR, locale);
     }
@@ -62,7 +68,7 @@ public class ExceptionInfoHandler {
     }
 
     //    https://stackoverflow.com/questions/538870/should-private-helper-methods-be-static-if-they-can-be-static
-    private static ErrorInfo logAndGetErrorInfo(HttpServletRequest req, Exception e, boolean logException, ErrorType errorType, Locale locale) {
+    private ErrorInfo logAndGetErrorInfo(HttpServletRequest req, Exception e, boolean logException, ErrorType errorType, Locale locale) {
         Throwable rootCause = ValidationUtil.getRootCause(e);
         if (logException) {
             log.error(errorType + " at request " + req.getRequestURL(), rootCause);
@@ -71,15 +77,18 @@ public class ExceptionInfoHandler {
         }
         String detail = rootCause.getLocalizedMessage();
         Class eClass = e.getClass();
-        if (eClass.equals(MethodArgumentNotValidException.class)) {
-            detail = getBindingResultString(((MethodArgumentNotValidException) e).getBindingResult());
+        if (e instanceof BindException) {
+            detail = getBindingResultString(((BindException) e).getBindingResult());
         } else if (eClass.equals(DataIntegrityViolationException.class)) {
-            if (rootCause.getLocalizedMessage().contains("users_unique_email_idx")) {
-                detail = "User with this email already exists";
-                //TODO
-                //detail = messageSource.getMessage("validation.uniqueemail", null, locale);
+            for (Map.Entry<String, String> entry : CONSTRAINS_I18N_MAP.entrySet()) {
+                if (rootCause.getLocalizedMessage().contains(entry.getKey())) {
+                    detail = messageSource.getMessage(entry.getValue(), null, locale);
+                }
             }
         }
-        return new ErrorInfo(req.getRequestURL(), errorType, detail);
+        return new ErrorInfo(req.getRequestURL(),
+                errorType,
+                messageSource.getMessage(errorType.getDescription(), null, locale),
+                detail);
     }
 }

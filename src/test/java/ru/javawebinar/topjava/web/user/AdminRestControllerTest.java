@@ -10,13 +10,16 @@ import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
-import ru.javawebinar.topjava.web.json.JsonUtil;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.util.StringUtils.hasLength;
 import static ru.javawebinar.topjava.TestUtil.userHttpBasic;
 import static ru.javawebinar.topjava.UserTestData.*;
 
@@ -147,30 +150,24 @@ class AdminRestControllerTest extends AbstractControllerTest {
 
     @Test
     void insertNotValid() throws Exception {
-        User notValidName = getNew();
-        notValidName.setName("");
-
-        User notValidPassword = getNew();
-        notValidPassword.setPassword("");
-
-        User notValidEmail = getNew();
-        notValidEmail.setEmail("notvalidemail");
-
-        User notValidCalories = getNew();
-        notValidCalories.setCaloriesPerDay(5001);
-
-        notValidTest(notValidName,
-                notValidPassword,
-                notValidEmail,
-                notValidCalories);
-    }
-
-    void notValidTest(User... notValidUsers) throws Exception {
-        for (User notValid : notValidUsers) {
+        for (User notValidUser : getNotValid()) {
             perform(MockMvcRequestBuilders.post(REST_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .with(userHttpBasic(admin))
-                    .content(JsonUtil.writeValue(notValid)))
+                    .content(hasLength(notValidUser.getPassword()) ? jsonWithPassword(notValidUser, "newPass") : ""))
+                    .andDo(print())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+    }
+
+    @Test
+    void updateNotValid() throws Exception {
+        for (User notValidUser : getNotValid()) {
+            perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(userHttpBasic(admin))
+                    .content(hasLength(notValidUser.getPassword()) ? jsonWithPassword(notValidUser, "newPass") : ""))
                     .andDo(print())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     .andExpect(status().isUnprocessableEntity());

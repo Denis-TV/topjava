@@ -1,12 +1,14 @@
 package ru.javawebinar.topjava.util.exception;
 
 public enum ErrorType {
-    APP_ERROR("Application error"),
-    DATA_NOT_FOUND("Data not found"),
-    DATA_ERROR("Data error"),
-    VALIDATION_ERROR("Validation error");
+    APP_ERROR("error.application"),
+    DATA_NOT_FOUND("error.datanotfound"),
+    DATA_ERROR("error.data"),
+    VALIDATION_ERROR("error.validation");
 
     private String description;
+
+
 
     ErrorType(String description) {
         this.description = description;
