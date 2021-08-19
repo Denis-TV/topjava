@@ -28,10 +28,6 @@ public class ValidationUtil {
     private ValidationUtil() {
     }
 
-    public final static Map<String, String> CONSTRAINS_I18N_MAP = Map.of(
-            "users_unique_email_idx", "validation.emailnotunique",
-            "meals_unique_user_datetime_idx", "validation.mealdatetimenotunique");
-
     public static <T> void validate(T bean) {
         // https://alexkosarev.name/2018/07/30/bean-validation-api/
         Set<ConstraintViolation<T>> violations = validator.validate(bean);

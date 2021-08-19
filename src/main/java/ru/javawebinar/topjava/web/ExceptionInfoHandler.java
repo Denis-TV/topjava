@@ -26,7 +26,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Locale;
 import java.util.Map;
 
-import static ru.javawebinar.topjava.util.ValidationUtil.CONSTRAINS_I18N_MAP;
 import static ru.javawebinar.topjava.util.ValidationUtil.getBindingResultString;
 import static ru.javawebinar.topjava.util.exception.ErrorType.*;
 
@@ -37,6 +36,10 @@ public class ExceptionInfoHandler {
 
     @Autowired
     private MessageSource messageSource;
+
+    public final static Map<String, String> CONSTRAINS_I18N_MAP = Map.of(
+            "users_unique_email_idx", "validation.emailnotunique",
+            "meals_unique_user_datetime_idx", "validation.mealdatetimenotunique");
 
     //  http://stackoverflow.com/a/22358422/548473
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -75,20 +78,25 @@ public class ExceptionInfoHandler {
         } else {
             log.warn("{} at request  {}: {}", errorType, req.getRequestURL(), rootCause.toString());
         }
-        String detail = rootCause.getLocalizedMessage();
-        Class eClass = e.getClass();
-        if (e instanceof BindException) {
-            detail = getBindingResultString(((BindException) e).getBindingResult());
-        } else if (eClass.equals(DataIntegrityViolationException.class)) {
-            for (Map.Entry<String, String> entry : CONSTRAINS_I18N_MAP.entrySet()) {
-                if (rootCause.getLocalizedMessage().contains(entry.getKey())) {
-                    detail = messageSource.getMessage(entry.getValue(), null, locale);
-                }
-            }
-        }
+        String detail = getExceptionDetail(e, rootCause, locale);
         return new ErrorInfo(req.getRequestURL(),
                 errorType,
                 messageSource.getMessage(errorType.getDescription(), null, locale),
                 detail);
+    }
+
+    private String getExceptionDetail(Throwable e, Throwable rootCause, Locale locale) {
+        String exceptionDetail = rootCause.getLocalizedMessage();
+        Class eClass = e.getClass();
+        if (e instanceof BindException) {
+            exceptionDetail = getBindingResultString(((BindException) e).getBindingResult());
+        } else if (eClass.equals(DataIntegrityViolationException.class)) {
+            for (Map.Entry<String, String> entry : CONSTRAINS_I18N_MAP.entrySet()) {
+                if (rootCause.getLocalizedMessage().contains(entry.getKey())) {
+                    exceptionDetail = messageSource.getMessage(entry.getValue(), null, locale);
+                }
+            }
+        }
+        return exceptionDetail;
     }
 }

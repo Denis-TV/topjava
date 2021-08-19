@@ -8,8 +8,6 @@ public enum ErrorType {
 
     private String description;
 
-
-
     ErrorType(String description) {
         this.description = description;
     }
